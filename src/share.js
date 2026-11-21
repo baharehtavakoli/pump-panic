@@ -5,7 +5,7 @@
 //                           a photo of the station with the results on top
 //   shareText(result)     → the post text, with a Wordle-style strip
 //   shareResult(result)   → phone: share sheet with image (pick LinkedIn)
-//                           desktop: copy text + open LinkedIn's share page
+//                           desktop: save image + copy text + open a LinkedIn post
 //   saveImage(result)     → download the card as a PNG
 // ─────────────────────────────────────────────────────────────
 
@@ -219,7 +219,9 @@ export async function shareResult(r) {
     }
   }
 
-  // Desktop: copy the text, then open LinkedIn's share page for the link
+  // Desktop: a post WITH the image shows big in the feed (a plain link only
+  // gets a small preview strip). So: copy the text (it includes the link),
+  // save the card image, then open LinkedIn's "start a post" box.
   let copied = false;
   try {
     await navigator.clipboard.writeText(text);
@@ -227,6 +229,9 @@ export async function shareResult(r) {
   } catch {
     /* clipboard blocked */
   }
-  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl(r))}`, '_blank', 'noopener');
-  return copied ? 'Result copied! Paste it into your LinkedIn post.' : 'Opening LinkedIn…';
+  await saveImage(r);
+  window.open('https://www.linkedin.com/feed/?shareActive=true', '_blank', 'noopener');
+  return copied
+    ? 'Image saved and text copied! In LinkedIn: add the image, then paste the text.'
+    : 'Image saved! In LinkedIn: add the image to your post.';
 }
