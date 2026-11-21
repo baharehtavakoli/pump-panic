@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Pump Panic</title>
+    <meta name="description" content="Night shift at the pump station. Keep the pumps alive for 90 seconds. New shift every day." />
+    <meta name="theme-color" content="#0e1726" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+
+    <!-- Link preview (LinkedIn, WhatsApp, Slack…). Image must be a full URL. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Pump Panic: can you keep the pumps alive?" />
+    <meta property="og:description" content="A 90-second night shift at the pump station. Press the right tool before the pumps blow. New shift every day." />
+    <meta property="og:url" content="https://baharehtavakoli.github.io/pump-panic/" />
+    <meta property="og:image" content="https://baharehtavakoli.github.io/pump-panic/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="627" />
+    <meta property="og:image:alt" content="Pump Panic: cartoon pump station at night with pumps overheating" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <!-- 3D scene + floating badges -->
+    <main id="stage"></main>
+
+    <!-- Top bar: time, score, explosions -->
+    <header class="hud">
+      <div class="hud__box" id="hud-time"><small>SHIFT</small><strong id="h-time">1:30</strong></div>
+      <div class="hud__box hud__score"><small>SCORE</small><strong id="h-score">0</strong><span id="h-combo" class="combo"></span></div>
+      <div class="hud__box"><small>BOOMS</small><div class="lives" id="h-lives"></div></div>
+    </header>
+    <button class="mute" id="btn-mute" aria-label="Sound on/off">
+      <svg class="icon on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+      <svg class="icon off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+    </button>
+
+    <!-- Red glow at the screen edges when a pump is about to blow -->
+    <div class="vignette" id="vignette"></div>
+
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <!-- Bottom tray: the 3 tool buttons are ALWAYS here during a shift.
+         Pressing one opens its gesture just above, for the most urgent pump. -->
+    <section class="tray" id="tray" hidden>
+      <div class="gesture" id="gesture" hidden></div>
+      <div class="tools" id="tools"></div>
+    </section>
+
+    <!-- Start screen -->
+    <section class="screen" id="screen-start" hidden>
+      <div class="card">
+        <p class="eyebrow">Night shift · Pump station</p>
+        <h1>Pump Panic</h1>
+        <p class="lead">Keep the pumps alive for 90 seconds. Each pump in trouble shows the button it needs. Press it before the pump blows! Hall B joins halfway through.</p>
+        <ul class="howto" id="howto"></ul>
+        <button class="btn-primary" id="btn-start">Play today's shift</button>
+        <button class="btn-secondary" id="btn-practice">Practice shift</button>
+        <p class="fineprint">3 explosions and the station goes down. Everyone gets the same daily shift.</p>
+      </div>
+    </section>
+
+    <!-- End screen -->
+    <section class="screen" id="screen-over" hidden>
+      <div class="card">
+        <p class="eyebrow" id="over-title">Shift complete</p>
+        <p class="rank-label">Your rank</p>
+        <h1 id="over-rank"></h1>
+        <!-- The shareable result card (same image that gets shared) -->
+        <img class="result-card" id="over-card" alt="" />
+        <p class="best" id="over-best"></p>
+        <div class="share-row">
+          <button class="btn-primary btn-linkedin" id="btn-share">
+            <span class="in-logo" aria-hidden="true">in</span> Share on LinkedIn
+          </button>
+          <button class="btn-secondary btn-square" id="btn-image" aria-label="Save image">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+          </button>
+        </div>
+        <button class="btn-secondary" id="btn-again">Play again</button>
+      </div>
+    </section>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
