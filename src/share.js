@@ -16,6 +16,15 @@ const H = 627;
 // Where the game lives (works on GitHub Pages or any host)
 export const gameUrl = () => location.origin + location.pathname;
 
+// The link we share depends on how the shift went. Each one is a small page
+// (public/r/<outcome>/) with its own funny LinkedIn preview title and image,
+// that sends people straight to the game.
+export function outcome(r) {
+  if (r.stationDown) return 'meltdown';
+  return ['flawless', 'one-boom', 'two-booms'][Math.min(r.explosions, 2)];
+}
+export const shareUrl = (r) => `${gameUrl()}r/${outcome(r)}/`;
+
 // ── Drawing helpers ──────────────────────────────────────────
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -175,7 +184,7 @@ export function shareText(r) {
     strip,
     `${r.saves} pumps saved, ${r.explosions} explosion${r.explosions === 1 ? '' : 's'}.`,
     '',
-    `Can you beat it? ${gameUrl()}`,
+    `Can you beat it? ${shareUrl(r)}`,
   ].join('\n');
 }
 
@@ -218,6 +227,6 @@ export async function shareResult(r) {
   } catch {
     /* clipboard blocked */
   }
-  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(gameUrl())}`, '_blank', 'noopener');
+  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl(r))}`, '_blank', 'noopener');
   return copied ? 'Result copied! Paste it into your LinkedIn post.' : 'Opening LinkedIn…';
 }

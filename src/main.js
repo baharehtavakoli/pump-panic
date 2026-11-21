@@ -360,3 +360,8 @@ if (import.meta.env.DEV) window.__pumpPanic = { frame, world, CONFIG, get game()
 
 ui.setDaily(daily);
 ui.showScreen('screen-start');
+
+// Dev only: http://localhost:5174/#make-og rebuilds the link-preview images
+if (import.meta.env.DEV && location.hash === '#make-og') {
+  import('./dev/og-maker.js').then((m) => m.makeAll({ frame, world, CONFIG, getGame: () => game }));
+}
