@@ -234,10 +234,12 @@ export async function shareResult(r) {
   await saveImage(r);
   window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   // Step-by-step note shown under the buttons
+  // The link in the text makes LinkedIn add the link card by itself, so the
+  // post works as is. The image is an optional upgrade (LinkedIn then shows
+  // the big image instead of the card; the link stays in the text).
   return [
-    `✅ Image saved to your Downloads: ${imageName(r)}`,
-    '✅ Post text with the game link is ready',
-    'In LinkedIn: click the photo icon (Add media) and choose the image.',
+    '✅ Your post is ready in LinkedIn, with the game link card.',
     'If the text box is empty, paste it with Ctrl+V.',
+    `⭐ Want a bigger post? Add the image we saved (${imageName(r)}, in Downloads) with the photo icon.`,
   ].join('\n');
 }
