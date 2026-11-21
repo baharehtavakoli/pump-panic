@@ -33,5 +33,8 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+      # Give GitHub a moment to register the upload (deploy sometimes
+      # can't find it when it runs immediately after)
+      - run: sleep 15
       - id: deployment
         uses: actions/deploy-pages@v4
