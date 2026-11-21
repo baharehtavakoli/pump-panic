@@ -479,3 +479,6 @@ h1, p { margin: 0; }
 .tray .toast { font-size: 14px; padding: 7px 14px; }
 .share-note { font-size: 14px; font-weight: 700; color: var(--good); text-shadow: 0 2px 0 var(--ink); min-height: 0; }
 .share-note:empty { display: none; }
+/* Share steps: one line per step, left-aligned for easy reading */
+.share-note { white-space: pre-line; text-align: start; line-height: 1.5; font-size: 13px; color: #d9f7de;
+  background: var(--well); border: 2px solid var(--ink); border-radius: 12px; padding: 8px 12px; }

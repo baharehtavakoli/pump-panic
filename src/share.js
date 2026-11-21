@@ -192,11 +192,13 @@ export function shareText(r) {
 
 const toBlob = (canvas) => new Promise((res) => canvas.toBlob(res, 'image/png'));
 
+const imageName = (r) => `pump-panic-${r.mode === 'daily' ? `day-${r.day}` : 'practice'}.png`;
+
 export async function saveImage(r) {
   const blob = await toBlob(await drawCard(r));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `pump-panic-${r.mode === 'daily' ? `day-${r.day}` : 'practice'}.png`;
+  a.download = imageName(r);
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
@@ -220,18 +222,22 @@ export async function shareResult(r) {
   }
 
   // Desktop: a post WITH the image shows big in the feed (a plain link only
-  // gets a small preview strip). So: copy the text (it includes the link),
-  // save the card image, then open LinkedIn's "start a post" box.
-  let copied = false;
+  // gets a small preview strip). LinkedIn does not let websites attach an
+  // image to a post, so: save the image, copy the text (it includes the link),
+  // and open LinkedIn's post box with the text already filled in
+  // ("text=" is an unofficial LinkedIn option; the copied text is the backup).
   try {
     await navigator.clipboard.writeText(text);
-    copied = true;
   } catch {
-    /* clipboard blocked */
+    /* clipboard blocked: the text is still filled in by the link below */
   }
   await saveImage(r);
-  window.open('https://www.linkedin.com/feed/?shareActive=true', '_blank', 'noopener');
-  return copied
-    ? 'Image saved and text copied! In LinkedIn: add the image, then paste the text.'
-    : 'Image saved! In LinkedIn: add the image to your post.';
+  window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  // Step-by-step note shown under the buttons
+  return [
+    `✅ Image saved to your Downloads: ${imageName(r)}`,
+    '✅ Post text with the game link is ready',
+    'In LinkedIn: click the photo icon (Add media) and choose the image.',
+    'If the text box is empty, paste it with Ctrl+V.',
+  ].join('\n');
 }
