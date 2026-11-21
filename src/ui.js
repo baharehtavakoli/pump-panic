@@ -74,7 +74,7 @@ export function createUI(handlers) {
 
   // Today's challenge number on the start button
   function setDaily(day) {
-    $('btn-start').textContent = `Play today's shift #${day.number}`;
+    $('btn-start').textContent = `Play tonight's shift #${day.number}`;
   }
 
   // ── Screens ────────────────────────────────────────────────
@@ -92,12 +92,21 @@ export function createUI(handlers) {
     const card = $('over-card');
     card.src = cardUrl;
     card.alt = `Score ${r.score}, ${r.saves} pumps saved, ${r.explosions} explosions, ${r.water} m³ water, best combo x${r.bestCombo}`;
+    // The details live here, not on the shared image
+    $('over-stats').innerHTML = [
+      ['Saved', r.saves],
+      ['Booms', `${r.explosions}/${CONFIG.maxExplosions}`],
+      ['Water', `${r.water.toLocaleString('en-US')} m³`],
+      ['Combo', `x${r.bestCombo}`],
+    ]
+      .map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`)
+      .join('');
     $('over-best').textContent =
       r.mode === 'daily'
         ? r.score >= r.best
-          ? `New best for daily shift #${r.day}!`
-          : `Your best today: ${r.best.toLocaleString('en-US')}`
-        : 'Practice shift: try the daily shift to compare with others.';
+          ? `New best for tonight's shift #${r.day}!`
+          : `Your best tonight: ${r.best.toLocaleString('en-US')}`
+        : 'Practice shift: play tonight\'s shift to compare with others.';
     showScreen('screen-over');
   }
 

@@ -2,7 +2,8 @@
 // share.js — the result card image + sharing to LinkedIn
 //
 //   drawCard(result)      → a 1200×627 canvas (LinkedIn's image size):
-//                           a photo of the station with the results on top
+//                           a photo of the station with what happened,
+//                           the score and rank (details stay on the end screen)
 //   shareText(result)     → the post text, with a Wordle-style strip
 //   shareResult(result)   → phone: share sheet with image (pick LinkedIn)
 //                           desktop: save image + copy text + open a LinkedIn post
@@ -92,80 +93,81 @@ export async function drawCard(r) {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
   }
-  // Darken the top and bottom so the text is easy to read
-  const topShade = ctx.createLinearGradient(0, 0, 0, 300);
-  topShade.addColorStop(0, 'rgba(11,18,32,0.92)');
-  topShade.addColorStop(0.6, 'rgba(11,18,32,0.55)');
-  topShade.addColorStop(1, 'rgba(11,18,32,0)');
-  ctx.fillStyle = topShade;
-  ctx.fillRect(0, 0, W, 300);
-  const bottomShade = ctx.createLinearGradient(0, H - 150, 0, H);
-  bottomShade.addColorStop(0, 'rgba(11,18,32,0)');
-  bottomShade.addColorStop(1, 'rgba(11,18,32,0.9)');
-  ctx.fillStyle = bottomShade;
-  ctx.fillRect(0, H - 150, W, 150);
+  // Darken top and bottom so the text is easy to read; the middle stays a clear photo
+  const shade = (y0, y1, from, to) => {
+    const g = ctx.createLinearGradient(0, y0, 0, y1);
+    g.addColorStop(0, `rgba(11,18,32,${from})`);
+    g.addColorStop(1, `rgba(11,18,32,${to})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, y0, W, y1 - y0);
+  };
+  shade(0, 330, 0.92, 0);
+  shade(H - 200, H, 0, 0.92);
 
-  // ── Top-left: which shift, how it ended, game name, rank ──
-  const tab = r.mode === 'daily' ? `DAILY SHIFT #${r.day} · ${r.dayLabel.toUpperCase()}` : 'PRACTICE SHIFT';
+  // ── Small tab: game + which shift ──
+  const tab = r.mode === 'daily' ? `PUMP PANIC · TONIGHT'S SHIFT #${r.day}` : 'PUMP PANIC · PRACTICE SHIFT';
   ctx.font = '26px "Lilita One"';
   const tabW = ctx.measureText(tab).width + 44;
-  plate(ctx, 40, 30, tabW, 48, 16, '#557aa8', '#34507a');
-  outlined(ctx, tab, 40 + tabW / 2, 64, 26, '#fff', 'center');
+  plate(ctx, W / 2 - tabW / 2, 26, tabW, 48, 16, '#557aa8', '#34507a');
+  outlined(ctx, tab, W / 2, 60, 26, '#fff', 'center');
 
-  const status = r.stationDown ? 'STATION DOWN!' : 'SHIFT COMPLETE';
-  ctx.font = '26px "Lilita One"';
-  const stW = ctx.measureText(status).width + 44;
-  plate(ctx, 40 + tabW + 14, 30, stW, 48, 16, r.stationDown ? '#e2554f' : '#4fbf6a', r.stationDown ? '#a8302b' : '#2e8f4a');
-  outlined(ctx, status, 40 + tabW + 14 + stW / 2, 64, 26, '#fff', 'center');
+  // ── Headline: what happened (same words as the post), up to 2 lines ──
+  const kind = outcome(r);
+  const words = HEADLINES[kind].replace(/\p{Extended_Pictographic}/gu, '').trim().toUpperCase().split(/\s+/);
+  const MAX = 1100;
+  const width = (ws) => ctx.measureText(ws.join(' ')).width;
+  // Two lines of similar length (no single word left alone on line 2)
+  const balanced = () => {
+    let best = null;
+    for (let k = 1; k < words.length; k++) {
+      const a = words.slice(0, k);
+      const b = words.slice(k);
+      const worst = Math.max(width(a), width(b));
+      if (!best || worst < best.worst) best = { worst, lines: [a.join(' '), b.join(' ')] };
+    }
+    return best;
+  };
+  // Prefer one big line; otherwise two balanced lines, shrinking until they fit
+  let size = 80;
+  let lines = null;
+  for (; size >= 64 && !lines; size -= 4) {
+    ctx.font = `${size}px "Lilita One"`;
+    if (width(words) <= MAX) lines = [words.join(' ')];
+  }
+  if (!lines) {
+    for (size = 80; size >= 44; size -= 4) {
+      ctx.font = `${size}px "Lilita One"`;
+      const b = balanced();
+      if (b && b.worst <= MAX) {
+        lines = b.lines;
+        break;
+      }
+    }
+    if (!lines) lines = balanced()?.lines ?? [words.join(' ')]; // very long text: best effort
+  } else size += 4; // undo the last step of the loop
+  lines.forEach((line, k) => outlined(ctx, line, W / 2, 148 + k * size * 1.04, size, HEADLINE_COLORS[kind], 'center'));
 
-  outlined(ctx, 'PUMP PANIC', 44, 140, 40, '#7fd0ff');
-  outlined(ctx, r.rank, 44, 208, 64);
-
-  // ── Top-right: score + 4 small stats ──
-  plate(ctx, 820, 30, 340, 120, 24, '#3d5a80', '#2a4060');
-  ctx.font = '700 20px "Rubik"';
+  // ── Bottom-left: score + rank ──
+  outlined(ctx, fmt(r.score), 48, H - 70, 84);
+  ctx.font = '84px "Lilita One"';
+  const scoreW = ctx.measureText(fmt(r.score)).width;
+  ctx.font = '700 24px "Rubik"';
   ctx.fillStyle = '#b3c3d9';
-  ctx.textAlign = 'center';
-  ctx.fillText('SCORE', 990, 64);
-  outlined(ctx, fmt(r.score), 990, 128, 60, '#fff', 'center');
-
-  const stats = [
-    ['SAVED', r.saves],
-    ['BOOMS', `${r.explosions}/3`],
-    ['WATER', `${fmt(r.water)} m³`],
-    ['COMBO', `x${r.bestCombo}`],
-  ];
-  stats.forEach(([label, value], k) => {
-    const x = 820 + (k % 2) * 174;
-    const y = 172 + Math.floor(k / 2) * 66;
-    ctx.fillStyle = 'rgba(26,40,64,0.92)';
-    roundRect(ctx, x, y, 166, 56, 14);
-    ctx.fill();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = INK;
-    ctx.stroke();
-    ctx.font = '700 15px "Rubik"';
-    ctx.fillStyle = '#b3c3d9';
-    ctx.textAlign = 'left';
-    ctx.fillText(label, x + 14, y + 22);
-    outlined(ctx, String(value), x + 14, y + 48, 24);
-  });
-
-  // ── Bottom: timeline strip + call to action ──
-  const events = r.timeline.slice(-30); // the latest events (the finale matters most)
-  events.forEach((e, k) => {
-    ctx.fillStyle = e === 'boom' ? '#ef4444' : '#4fbf6a';
-    roundRect(ctx, 44 + k * 24, H - 112, 18, 18, 5);
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = INK;
-    ctx.stroke();
-  });
-  outlined(ctx, 'Can you keep the pumps alive for 90 seconds?', 44, H - 52, 30);
-  ctx.font = '700 20px "Rubik"';
-  ctx.fillStyle = '#7fd0ff';
   ctx.textAlign = 'left';
-  ctx.fillText(`Play free: ${gameUrl().replace(/^https?:\/\//, '')}`, 46, H - 20);
+  ctx.fillText('POINTS', 48 + scoreW + 14, H - 76);
+  ctx.font = '24px "Lilita One"';
+  const rankW = ctx.measureText(r.rank.toUpperCase()).width + 36;
+  plate(ctx, 48, H - 58, rankW, 40, 14, '#557aa8', '#34507a');
+  outlined(ctx, r.rank.toUpperCase(), 48 + rankW / 2, H - 29, 24, '#fff', 'center');
+
+  // ── Bottom-right: the challenge ──
+  const cx = W - 48 - 220;
+  plate(ctx, W - 48 - 440, H - 124, 440, 96, 22, '#7fd0ff', '#2f86e0');
+  outlined(ctx, 'CAN YOU BEAT IT?', cx, H - 78, 40, '#fff', 'center');
+  ctx.font = '700 20px "Rubik"';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.fillText(gameUrl().replace(/^https?:\/\//, '').replace(/\/$/, ''), cx, H - 44);
 
   return canvas;
 }
@@ -174,6 +176,9 @@ export async function drawCard(r) {
 
 // The opening line of the post, one per outcome. Same words as the link
 // preview titles (public/r/<outcome>/index.html), so the post reads as one.
+// Color of the headline on the result image, per outcome
+const HEADLINE_COLORS = { flawless: '#8ff59d', 'one-boom': '#ffd166', 'two-booms': '#ffb15c', meltdown: '#ff6b5e' };
+
 const HEADLINES = {
   flawless: 'Flawless shift! I kept every pump alive 🛠️',
   'one-boom': 'Only one pump blew up on my watch 😅',
@@ -210,17 +215,27 @@ export async function shareResult(r) {
   const text = shareText(r);
   const isPhone = matchMedia('(pointer: coarse)').matches;
 
-  // Phones: the share sheet with the image attached (pick the LinkedIn app)
-  if (isPhone && navigator.canShare) {
-    const file = new File([await toBlob(await drawCard(r))], 'pump-panic.png', { type: 'image/png' });
-    if (navigator.canShare({ files: [file] })) {
+  // Phones: the phone's share sheet with the post TEXT (it includes the link,
+  // so LinkedIn adds the link card by itself). Sharing image files from a web
+  // page is unreliable on phones, so the image stays optional (⬇ button).
+  // Nothing is awaited before share(): phones only allow it right after a tap.
+  if (isPhone) {
+    if (navigator.share) {
       try {
-        await navigator.share({ files: [file], text });
-        return '';
-      } catch {
-        return ''; // player closed the share sheet
+        await navigator.share({ text });
+        return '✅ Shared! Tip: tap ⬇ to save the image for a bigger post.';
+      } catch (e) {
+        if (e.name === 'AbortError') return ''; // player closed the share sheet
+        // sharing isn't allowed here: use LinkedIn in the browser instead
       }
     }
+    window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      /* ignore */
+    }
+    return '✅ Your post is ready in LinkedIn. If the text is missing, paste it.';
   }
 
   // Desktop: a post WITH the image shows big in the feed (a plain link only

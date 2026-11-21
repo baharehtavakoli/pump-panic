@@ -482,3 +482,10 @@ h1, p { margin: 0; }
 /* Share steps: one line per step, left-aligned for easy reading */
 .share-note { white-space: pre-line; text-align: start; line-height: 1.5; font-size: 13px; color: #d9f7de;
   background: var(--well); border: 2px solid var(--ink); border-radius: 12px; padding: 8px 12px; }
+
+/* End screen: 4 small stats in one row, under the result image */
+.stats--row { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.stats--row div { padding: 6px 4px; text-align: center; }
+.stats--row div:first-child { grid-column: auto; }
+.stats--row dt { font-size: 10px; }
+.stats--row dd, .stats--row div:first-child dd { font-size: 17px; text-shadow: 0 2px 0 var(--ink); }

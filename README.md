@@ -6,7 +6,7 @@ Press the right button and do the gesture before it blows. Three explosions and 
 
 **Play:** https://baharehtavakoli.github.io/pump-panic/
 
-- Daily shift: everyone gets the same sequence of problems each day, so scores are comparable.
+- Tonight's shift: everyone gets the same sequence of problems each night (a new one every day), so scores are comparable.
 - Share your result card on LinkedIn, or save it as an image.
 
 ## Run locally

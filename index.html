@@ -4,14 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Pump Panic</title>
-    <meta name="description" content="Night shift at the pump station. Keep the pumps alive for 90 seconds. New shift every day." />
+    <meta name="description" content="Night shift at the pump station. Keep the pumps alive for 90 seconds. New shift every night." />
     <meta name="theme-color" content="#0e1726" />
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
 
     <!-- Link preview (LinkedIn, WhatsApp, Slack…). Image must be a full URL. -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Pump Panic: can you keep the pumps alive?" />
-    <meta property="og:description" content="A 90-second night shift at the pump station. Press the right tool before the pumps blow. New shift every day." />
+    <meta property="og:description" content="A 90-second night shift at the pump station. Press the right tool before the pumps blow. New shift every night." />
     <meta property="og:url" content="https://baharehtavakoli.github.io/pump-panic/" />
     <meta property="og:image" content="https://baharehtavakoli.github.io/pump-panic/og-image.png" />
     <meta property="og:image:width" content="1200" />
@@ -54,9 +54,9 @@
         <h1>Pump Panic</h1>
         <p class="lead">Keep the pumps alive for 90 seconds. Each pump in trouble shows the button it needs. Press it before the pump blows! Hall B joins halfway through.</p>
         <ul class="howto" id="howto"></ul>
-        <button class="btn-primary" id="btn-start">Play today's shift</button>
+        <button class="btn-primary" id="btn-start">Play tonight's shift</button>
         <button class="btn-secondary" id="btn-practice">Practice shift</button>
-        <p class="fineprint">3 explosions and the station goes down. Everyone gets the same daily shift.</p>
+        <p class="fineprint">3 explosions and the station goes down. Everyone gets the same shift each night.</p>
       </div>
     </section>
 
@@ -68,6 +68,8 @@
         <h1 id="over-rank"></h1>
         <!-- The shareable result card (same image that gets shared) -->
         <img class="result-card" id="over-card" alt="" />
+        <!-- Details stay here on the end screen, not on the shared image -->
+        <dl class="stats stats--row" id="over-stats"></dl>
         <p class="best" id="over-best"></p>
         <div class="share-row">
           <button class="btn-primary btn-linkedin" id="btn-share">

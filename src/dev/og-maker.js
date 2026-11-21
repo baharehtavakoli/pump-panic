@@ -9,6 +9,7 @@
 // ─────────────────────────────────────────────────────────────
 
 const OUTCOMES = {
+  image: { headline: 'PUMP PANIC', color: '#ffffff' }, // main link (og-image.png)
   flawless: { headline: 'FLAWLESS SHIFT!', color: '#8ff59d' },
   'one-boom': { headline: 'ONE PUMP DOWN', color: '#ffd166' },
   'two-booms': { headline: 'TWO PUMPS DOWN', color: '#ffb15c' },
@@ -51,7 +52,13 @@ async function makeOne({ frame, world, CONFIG, getGame }, kind) {
     g.pumps[i].danger = d;
   };
 
-  if (kind === 'flawless') {
+  if (kind === 'image') {
+    // Main preview: lots going on, one pump just blew
+    [[0, 'heat', 55], [1, 'pressure', 35], [2, 'clog', 78], [3, 'heat', 88], [5, 'pressure', 62]].forEach(([i, tr, d]) => trouble(i, tr, d));
+    step(1.6);
+    boom(4);
+    step(0.5);
+  } else if (kind === 'flawless') {
     step(0.2);
     [0, 2, 4].forEach((i) => world.celebrate(i));
     step(0.25);
@@ -149,7 +156,7 @@ async function compose(snapshot, { headline, color }) {
   text(headline, W / 2, 186, 104, color);
   text('Can you keep the pumps alive for 90 seconds?', W / 2, 248, 38);
   ctx.font = '30px "Lilita One"';
-  const cta = 'PLAY FREE · NEW SHIFT EVERY DAY';
+  const cta = 'PLAY FREE · NEW SHIFT EVERY NIGHT';
   const cw = ctx.measureText(cta).width + 60;
   plate(W / 2 - cw / 2, H - 92, cw, 60, 20, '#7fd0ff', '#2f86e0');
   text(cta, W / 2, H - 50, 30);
