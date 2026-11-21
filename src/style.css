@@ -470,3 +470,12 @@ h1, p { margin: 0; }
 .bolt.tight { color: #8fa3bb; }
 .bolt.tight svg { rotate: 270deg; translate: 0 1px; scale: 0.86; filter: drop-shadow(0 1px 0 rgb(11 18 32 / 0.55)); }
 @keyframes boltReady { to { scale: 1.12; } }
+
+/* ── Messages: one at a time, just above the tool buttons ───── */
+.tray .toasts {
+  position: absolute; top: auto; bottom: calc(100% + 12px); left: 0; right: 0;
+  transform: none; width: auto; display: grid; justify-items: center; pointer-events: none;
+}
+.tray .toast { font-size: 14px; padding: 7px 14px; }
+.share-note { font-size: 14px; font-weight: 700; color: var(--good); text-shadow: 0 2px 0 var(--ink); min-height: 0; }
+.share-note:empty { display: none; }

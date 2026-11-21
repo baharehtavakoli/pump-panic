@@ -14,7 +14,8 @@ export const CONFIG = {
   // (Tuned with a simulated player: fast players finish clean, average
   //  players survive with 1–2 booms, slow players lose the station ~80s.)
   spawnEvery: { start: 3.5, end: 1.15 },
-  firstTroubleAt: 1.2, // seconds after start
+  firstTroubleAt: 0.3, // seconds after start: action right away
+  idleSpawnDelay: 0.6, // if no pump has a problem, the next one comes this fast
 
   // How fast a problem gets worse (danger % per second).
   // 20 means a pump explodes ~5 seconds after its problem starts.
@@ -72,8 +73,8 @@ export const BOOM_LINES = [
 // Rank titles at the end, by score
 export const RANKS = [
   { min: 0, title: 'Panicked Intern' },
-  { min: 7000, title: 'Junior Operator' },
-  { min: 12000, title: 'Shift Supervisor' },
-  { min: 16000, title: 'Control Room Pro' },
-  { min: 19000, title: 'Pump Whisperer' },
+  { min: 8000, title: 'Junior Operator' },
+  { min: 14000, title: 'Shift Supervisor' },
+  { min: 20000, title: 'Control Room Pro' },
+  { min: 27000, title: 'Pump Whisperer' },
 ];

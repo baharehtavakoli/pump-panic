@@ -87,6 +87,7 @@ export function createUI(handlers) {
   // End screen: rank, the result card image (it holds score + stats), best of today
   function showOver(r, cardUrl) {
     $('over-title').textContent = r.stationDown ? 'Station down!' : 'Shift complete';
+    shareNote('');
     $('over-rank').textContent = r.rank;
     const card = $('over-card');
     card.src = cardUrl;
@@ -112,14 +113,19 @@ export function createUI(handlers) {
     [...$('h-lives').children].forEach((el, i) => el.classList.toggle('used', i < explosions));
   }
 
-  // Short messages that float in and fade out
+  // Short message just above the tool buttons. Only ONE at a time:
+  // a new message replaces the old one, so they never pile up.
   function toast(text, kind = '') {
     const el = document.createElement('div');
     el.className = `toast toast--${kind}`;
     el.textContent = text;
-    $('toasts').prepend(el);
-    setTimeout(() => el.remove(), 1900);
-    while ($('toasts').children.length > 2) $('toasts').lastChild.remove();
+    $('toasts').replaceChildren(el);
+    setTimeout(() => el.remove(), 1700);
+  }
+
+  // Message under the share buttons on the end screen
+  function shareNote(text) {
+    $('share-note').textContent = text || '';
   }
 
   // Button feedback: shake = "no", pulse = "this one!"
@@ -184,6 +190,7 @@ export function createUI(handlers) {
       const bolts = [...gesture.querySelectorAll('.bolt')];
       bolts[0].classList.add('next');
       $('g-btn').addEventListener('pointerdown', (e) => {
+        if (!g || g.finishIn != null) return; // all bolts already tight
         const btn = e.currentTarget;
         g.taps++;
         handlers.onTap();
@@ -194,7 +201,8 @@ export function createUI(handlers) {
           el.classList.toggle('tight', i < g.taps);
           el.classList.toggle('next', i === g.taps);
         });
-        if (g.taps >= CONFIG.fixTaps) setTimeout(finish, 120); // let the last bolt finish turning
+        // let the last bolt finish turning (counted on the game clock, in update())
+        if (g.taps >= CONFIG.fixTaps) g.finishIn = 0.12;
       });
     }
   }
@@ -214,6 +222,11 @@ export function createUI(handlers) {
   // Called every frame (for HOLD progress, lever position, vent steam)
   function update(dt) {
     if (!g) return;
+    if (g.finishIn != null) {
+      g.finishIn -= dt;
+      if (g.finishIn <= 0) finish();
+      return;
+    }
     if (g.tool === 'cool') {
       if (g.holding) {
         g.progress += dt / CONFIG.coolHoldSeconds;
@@ -255,5 +268,5 @@ export function createUI(handlers) {
     return mode !== 'none';
   }
 
-  return { setDaily, showScreen, showOver, setHud, toast, flashTool, lockTools, startGesture, cancelGesture, update, setBadge };
+  return { setDaily, showScreen, showOver, setHud, toast, shareNote, flashTool, lockTools, startGesture, cancelGesture, update, setBadge };
 }

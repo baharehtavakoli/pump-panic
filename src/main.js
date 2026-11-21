@@ -21,7 +21,7 @@ import '@fontsource/rubik/latin-700.css';
 import '@fontsource/rubik/latin-800.css';
 import '@fontsource/lilita-one/latin-400.css'; // chunky display font for titles and buttons
 import './style.css';
-import { CONFIG, TROUBLES, NO_TARGET, SAVE_LINES, BOOM_LINES, RANKS } from './config.js';
+import { CONFIG, TROUBLES, NO_TARGET, RANKS } from './config.js';
 import { createWorld, PUMP_POS } from './scene.js';
 import { createUI, TOOLS } from './ui.js';
 import { sfx, unlock, isMuted, setMuted } from './audio.js';
@@ -29,7 +29,6 @@ import { makeRng, dailyInfo, getBest, saveBest } from './random.js';
 import { drawCard, shareResult, saveImage } from './share.js';
 
 const world = createWorld(document.getElementById('stage'));
-const pick = (list) => list[Math.floor(Math.random() * list.length)];
 const lerp = (a, b, t) => a + (b - a) * t;
 const buzz = (pattern) => navigator.vibrate?.(pattern); // phone vibration (Android)
 
@@ -75,8 +74,7 @@ const ui = createUI({
   onStart: start,
   onRestart: () => start(game?.mode ?? 'daily'),
   onShare: async () => {
-    const msg = await shareResult(lastResult);
-    if (msg) ui.toast(msg, 'good');
+    ui.shareNote(await shareResult(lastResult));
   },
   onSaveImage: () => saveImage(lastResult),
   onTool: useTool,
@@ -167,7 +165,6 @@ function gestureDone() {
 
   world.celebrate(i); // bounce + sparkles
   world.popup(i, mult > 1 ? `+${points} <small>x${mult}</small>` : `+${points}`, 'good');
-  ui.toast(pick(SAVE_LINES), 'good');
   sfx('save', { combo: game.combo });
   buzz(30);
 
@@ -189,7 +186,6 @@ function explode(i) {
   p.danger = 0;
   p.broken = CONFIG.repairSeconds;
   if (game.selected === i) stopWorking();
-  ui.toast(pick(BOOM_LINES), 'boom');
 }
 
 // Tapping a pump: no extra step needed, just point at the right button
@@ -240,6 +236,10 @@ function update(dt) {
     sfx('online');
   }
 
+  // Never let the station sit idle: if no pump has a problem,
+  // the next one comes very soon (no "nothing is happening" moments)
+  if (!g.pumps.some((p) => p.trouble)) g.nextTrouble = Math.min(g.nextTrouble, CONFIG.idleSpawnDelay);
+
   // New trouble on a random healthy pump
   g.nextTrouble -= dt;
   if (g.nextTrouble <= 0) {
@@ -261,7 +261,6 @@ function update(dt) {
       p.broken -= dt;
       if (p.broken <= 0) {
         world.restore(i);
-        ui.toast(`${p.name} is back in service.`);
       }
       return;
     }

@@ -37,11 +37,12 @@
     <!-- Red glow at the screen edges when a pump is about to blow -->
     <div class="vignette" id="vignette"></div>
 
-    <div class="toasts" id="toasts" aria-live="polite"></div>
 
     <!-- Bottom tray: the 3 tool buttons are ALWAYS here during a shift.
          Pressing one opens its gesture just above, for the most urgent pump. -->
     <section class="tray" id="tray" hidden>
+      <!-- One short message at a time, just above the buttons -->
+      <div class="toasts" id="toasts" aria-live="polite"></div>
       <div class="gesture" id="gesture" hidden></div>
       <div class="tools" id="tools"></div>
     </section>
@@ -76,6 +77,7 @@
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
           </button>
         </div>
+        <p class="share-note" id="share-note" aria-live="polite"></p>
         <button class="btn-secondary" id="btn-again">Play again</button>
       </div>
     </section>
