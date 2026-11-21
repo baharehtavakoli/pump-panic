@@ -172,19 +172,21 @@ export async function drawCard(r) {
 
 // ── Text for the post ────────────────────────────────────────
 
+// The opening line of the post, one per outcome. Same words as the link
+// preview titles (public/r/<outcome>/index.html), so the post reads as one.
+const HEADLINES = {
+  flawless: 'Flawless shift! I kept every pump alive 🛠️',
+  'one-boom': 'Only one pump blew up on my watch 😅',
+  'two-booms': 'Two pumps exploded… but the station survived!',
+  meltdown: 'I blew up the whole station 💥',
+};
+
+// Short and human: what happened, the score, the challenge
 export function shareText(r) {
-  const strip = r.timeline
-    .slice(-20) // the latest events
-    .map((e) => (e === 'boom' ? '💥' : '✅'))
-    .join('');
-  const head = r.mode === 'daily' ? `Pump Panic · Daily shift #${r.day}` : 'Pump Panic · Practice shift';
   return [
-    `${head} 🛠️`,
-    `${r.rank} · ${fmt(r.score)} points`,
-    strip,
-    `${r.saves} pumps saved, ${r.explosions} explosion${r.explosions === 1 ? '' : 's'}.`,
-    '',
-    `Can you beat it? ${shareUrl(r)}`,
+    HEADLINES[outcome(r)],
+    `${fmt(r.score)} points · ${r.rank}`,
+    `Can you beat it? 👉 ${shareUrl(r)}`,
   ].join('\n');
 }
 
