@@ -16,7 +16,7 @@
 
 import { getAudio, setSfxListener } from './audio.js';
 
-const VOLUME = 0.22; // music level (sound effects are ~1)
+const VOLUME = 0.3; // music level (sound effects are ~1)
 const BEAT = 60 / 126;
 const BAR = BEAT * 4;
 const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
