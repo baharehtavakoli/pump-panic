@@ -5,6 +5,7 @@
 //   scene.js     → the 3D station and pump visuals
 //   particles.js → steam, water, smoke, sparks
 //   audio.js     → sound effects (made from code)
+//   music.js     → background music (made from code)
 //   ui.js        → HUD, tool tray, gestures, screens
 //   random.js    → daily challenge (same problems for everyone today)
 //   share.js     → result card image + LinkedIn sharing
@@ -25,6 +26,7 @@ import { CONFIG, TROUBLES, NO_TARGET, RANKS } from './config.js';
 import { createWorld, PUMP_POS } from './scene.js';
 import { createUI, TOOLS } from './ui.js';
 import { sfx, unlock, isMuted, setMuted, renderOffline } from './audio.js';
+import { startMusic, stopMusic, setTension, playEndTag } from './music.js';
 import { makeRng, dailyInfo, getBest, saveBest } from './random.js';
 import { drawCard, shareResult, saveImage } from './share.js';
 
@@ -104,6 +106,7 @@ function start(mode = 'daily') {
   stopWorking();
   ui.showScreen(null);
   sfx('start');
+  startMusic(); // the oom-pah tune starts with the shift
 }
 
 // ── Player actions ───────────────────────────────────────────
@@ -181,6 +184,7 @@ function explode(i) {
   buzz([90, 40, 90]);
   game.explosions++;
   game.timeline.push('boom');
+  setTension(true); // woodblocks join the music after the first boom
   game.combo = 0;
   p.trouble = null;
   p.danger = 0;
@@ -281,6 +285,9 @@ function update(dt) {
   // Red glow at the screen edges when something is about to blow
   document.getElementById('vignette').style.opacity = worst > 70 ? ((worst - 70) / 30).toFixed(2) : 0;
 
+  // Music gets tense in the last 15 seconds too
+  if (CONFIG.shiftSeconds - g.time < 15) setTension(true);
+
   // Countdown tick in the last 10 seconds
   const left = Math.ceil(CONFIG.shiftSeconds - g.time);
   if (left <= 10 && left < g.lastTick) {
@@ -295,6 +302,7 @@ function update(dt) {
 function endGame() {
   const g = game;
   g.phase = 'over';
+  stopMusic();
   stopWorking();
   document.getElementById('vignette').style.opacity = 0;
   const stationDown = g.explosions >= CONFIG.maxExplosions;
@@ -316,7 +324,7 @@ function endGame() {
   );
   setTimeout(
     async () => {
-      sfx(stationDown ? 'lose' : 'win');
+      playEndTag(!stationDown); // 'wah-wah-waaah' or a happy flourish
       ui.showOver(lastResult, await cardReady);
     },
     stationDown ? 1200 : 300 // let the last boom play out

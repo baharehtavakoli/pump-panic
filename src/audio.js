@@ -29,9 +29,21 @@ export function unlock() {
     noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    // Pause all sound (music too) while the tab is hidden, like the game itself
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) ctx.suspend();
+      else ctx.resume();
+    });
   }
   if (ctx.state === 'suspended') ctx.resume();
 }
+
+// For music.js: the shared audio engine and output (muting it mutes music too)
+export const getAudio = () => ({ ctx, master });
+
+// music.js listens to every sound effect so it can dip under it
+let sfxListener = null;
+export const setSfxListener = (fn) => (sfxListener = fn);
 
 export const isMuted = () => muted;
 export function setMuted(value) {
@@ -131,6 +143,7 @@ export function sfx(name, opts) {
   if (import.meta.env.DEV) window.__sfxLog?.(name, opts); // dev: lets the video recorder note each sound
   if (!ctx || muted) return;
   SOUNDS[name]?.(opts);
+  sfxListener?.(name);
 }
 
 // DEV TOOL: build a soundtrack offline from a list of { t, name, opts }
