@@ -46,9 +46,12 @@ export function setMuted(value) {
 
 // ── Building blocks ──────────────────────────────────────────
 
+// Extra start time, only used when rendering a soundtrack offline (renderOffline)
+let offset = 0;
+
 // A tone: frequency (Hz), optional slide to another frequency
 function tone({ freq, to = freq, dur = 0.15, type = 'sine', vol = 0.3, delay = 0 }) {
-  const t = ctx.currentTime + delay;
+  const t = ctx.currentTime + delay + offset;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
@@ -64,7 +67,7 @@ function tone({ freq, to = freq, dur = 0.15, type = 'sine', vol = 0.3, delay = 0
 
 // Filtered noise: hiss, splash, rumble
 function noise({ dur = 0.3, filter = 'bandpass', freq = 1000, q = 1, vol = 0.3, delay = 0 }) {
-  const t = ctx.currentTime + delay;
+  const t = ctx.currentTime + delay + offset;
   const src = ctx.createBufferSource();
   src.buffer = noiseBuffer;
   const f = ctx.createBiquadFilter();
@@ -125,6 +128,57 @@ const SOUNDS = {
 };
 
 export function sfx(name, opts) {
+  if (import.meta.env.DEV) window.__sfxLog?.(name, opts); // dev: lets the video recorder note each sound
   if (!ctx || muted) return;
   SOUNDS[name]?.(opts);
+}
+
+// DEV TOOL: build a soundtrack offline from a list of { t, name, opts }
+// (t = seconds), using the exact same sounds as the game. Returns a WAV file
+// as base64. Used to put game sounds on the gameplay video.
+export async function renderOffline(events, duration) {
+  const rate = 48000;
+  const saved = { ctx, master, noiseBuffer };
+  ctx = new OfflineAudioContext(1, Math.ceil(duration * rate), rate);
+  noiseBuffer = ctx.createBuffer(1, rate, rate);
+  const data = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  // gentle limiter so overlapping booms don't distort
+  const limiter = ctx.createDynamicsCompressor();
+  limiter.threshold.value = -10;
+  limiter.ratio.value = 8;
+  limiter.connect(ctx.destination);
+  master = ctx.createGain();
+  master.gain.value = 0.55;
+  master.connect(limiter);
+
+  for (const e of events) {
+    offset = e.t;
+    SOUNDS[e.name]?.(e.opts);
+  }
+  offset = 0;
+  const buffer = await ctx.startRendering();
+  ({ ctx, master, noiseBuffer } = saved);
+
+  // 16-bit mono WAV
+  const pcm = buffer.getChannelData(0);
+  const out = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+  const str = (o, s) => [...s].forEach((c, i) => out.setUint8(o + i, c.charCodeAt(0)));
+  str(0, 'RIFF');
+  out.setUint32(4, 36 + pcm.length * 2, true);
+  str(8, 'WAVEfmt ');
+  out.setUint32(16, 16, true);
+  out.setUint16(20, 1, true);
+  out.setUint16(22, 1, true);
+  out.setUint32(24, rate, true);
+  out.setUint32(28, rate * 2, true);
+  out.setUint16(32, 2, true);
+  out.setUint16(34, 16, true);
+  str(36, 'data');
+  out.setUint32(40, pcm.length * 2, true);
+  for (let i = 0; i < pcm.length; i++) out.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 0x7fff, true);
+  let bin = '';
+  const bytes = new Uint8Array(out.buffer);
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
 }

@@ -24,7 +24,7 @@ import './style.css';
 import { CONFIG, TROUBLES, NO_TARGET, RANKS } from './config.js';
 import { createWorld, PUMP_POS } from './scene.js';
 import { createUI, TOOLS } from './ui.js';
-import { sfx, unlock, isMuted, setMuted } from './audio.js';
+import { sfx, unlock, isMuted, setMuted, renderOffline } from './audio.js';
 import { makeRng, dailyInfo, getBest, saveBest } from './random.js';
 import { drawCard, shareResult, saveImage } from './share.js';
 
@@ -356,7 +356,7 @@ function frame(dt, t) {
 
 // Dev only (not in the published build): lets automated tests step the
 // game frame by frame, even when the browser pauses animation.
-if (import.meta.env.DEV) window.__pumpPanic = { frame, world, CONFIG, get game() { return game; } };
+if (import.meta.env.DEV) window.__pumpPanic = { frame, world, CONFIG, renderOffline, get game() { return game; } };
 
 ui.setDaily(daily);
 ui.showScreen('screen-start');
