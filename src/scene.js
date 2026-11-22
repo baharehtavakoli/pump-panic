@@ -240,7 +240,7 @@ export function createWorld(container) {
   const signEl = document.createElement('div');
   signEl.className = 'hall-sign';
   const sign = new CSS2DObject(signEl);
-  sign.position.set(-6.4, 1.2, -3.4);
+  sign.position.set(-7.6, 0.3, -3.4); // left of the back row, clear of the pump badges
   scene.add(sign);
   function setHallB(online) {
     signEl.className = `hall-sign ${online ? 'on' : ''}`;
@@ -264,7 +264,9 @@ export function createWorld(container) {
     const halfWidth = portrait ? 5.9 : 7; // world units that must fit left↔right
     // On phones, look a bit lower so the pumps sit higher (room for the buttons below)
     target.y = portrait ? -0.6 : 1;
-    const dist = Math.max(14, halfWidth / (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect));
+    // Wide screens: step back a bit more so the whole station (and the tank) fits under the HUD
+    const minDist = portrait ? 14 : 18;
+    const dist = Math.max(minDist, halfWidth / (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect));
     const dir = new THREE.Vector3(0, 0.7, 0.72).normalize();
     camera.position.copy(target).addScaledVector(dir, dist);
     camera.lookAt(target);
