@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { OutlineEffect } from 'three/addons/effects/OutlineEffect.js';
 import { createParticles } from './particles.js';
+import { buildDecor, skyTexture } from './decor.js';
 
 const COLORS = {
   sky: 0x0e1726,
@@ -30,7 +31,7 @@ const COLORS = {
   dark: 0x2a313b,
   pipe: 0x4f8fd0,
   pipeIn: 0x7fb3d5,
-  concrete: 0xa9b6c6,
+  concrete: 0x96a4b6,
   window: 0x9fd3ff,
   beaconIdle: 0x5b6b7f,
 };
@@ -49,6 +50,28 @@ TOON.needsUpdate = true;
 const toon = (color, opts = {}) => new THREE.MeshToonMaterial({ color, gradientMap: TOON, ...opts });
 // Things that should NOT get a dark outline (ground, glow, particles…)
 const noOutline = (material) => ((material.userData.outlineParameters = { visible: false }), material);
+
+// Soft dark "contact shadow" under pumps and tanks, so they sit on the floor
+const BLOB = (() => {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(64, 64, 8, 64, 64, 64);
+  g.addColorStop(0, 'rgba(0,0,0,0.75)');
+  g.addColorStop(0.55, 'rgba(0,0,0,0.35)');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+})();
+function contactShadow(size) {
+  const m = new THREE.Mesh(
+    new THREE.PlaneGeometry(size, size),
+    noOutline(new THREE.MeshBasicMaterial({ map: BLOB, transparent: true, depthWrite: false }))
+  );
+  m.rotation.x = -Math.PI / 2;
+  return m;
+}
 
 // ── Small builders ───────────────────────────────────────────
 
@@ -117,7 +140,10 @@ function buildPump(index) {
   ring.position.y = 0.12;
   ring.visible = false;
 
-  group.add(base, body, valve, wheel, top, ring);
+  const blob = contactShadow(3.4);
+  blob.position.y = 0.105;
+
+  group.add(blob, base, body, valve, wheel, top, ring);
 
   // Every mesh knows which pump it belongs to (for tapping)
   group.traverse((c) => {
@@ -157,7 +183,9 @@ function buildWorld(scene) {
   tank.position.set(0, 2.2, -8.6);
   const band = mesh(new THREE.CylinderGeometry(2.23, 2.23, 0.3, 40), COLORS.motor);
   band.position.set(0, 3.6, -8.6);
-  scene.add(tank, band);
+  const tankBlob = contactShadow(6.4);
+  tankBlob.position.set(0, 0.02, -8.6);
+  scene.add(tank, band, tankBlob);
 
   // Cooling tower (curved shape made by spinning a profile)
   const profile = [];
@@ -210,24 +238,29 @@ export function createWorld(container) {
   container.appendChild(labelRenderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(COLORS.sky);
-  scene.fog = new THREE.Fog(COLORS.sky, 26, 60);
+  scene.background = skyTexture(); // darker at the top, lighter at the horizon
+  scene.fog = new THREE.Fog(0x15243b, 28, 62);
 
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
   const target = new THREE.Vector3(0, 1, -1.4);
 
   // Night lighting: cool moonlight + soft fill, plus a flash for explosions
-  scene.add(new THREE.HemisphereLight(0xaec4e6, 0x26334a, 2.1));
-  const moon = new THREE.DirectionalLight(0xdbe8ff, 3);
-  moon.position.set(6, 16, 8);
+  // Moonlight comes from the left side, so shadows fall to the right
+  // and forward, where the camera can see them. Less fill light = more contrast.
+  scene.add(new THREE.HemisphereLight(0xaec4e6, 0x1d2a40, 1.5));
+  const moon = new THREE.DirectionalLight(0xdbe8ff, 3.6);
+  moon.position.set(-12, 16, 5);
   moon.castShadow = true;
   moon.shadow.mapSize.set(2048, 2048);
-  Object.assign(moon.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14 });
+  moon.shadow.bias = -0.0004;
+  moon.shadow.normalBias = 0.03;
+  Object.assign(moon.shadow.camera, { left: -13, right: 13, top: 13, bottom: -13, near: 1, far: 50 });
   scene.add(moon);
   const flash = new THREE.PointLight(0xffb15c, 0, 18, 1.5);
   scene.add(flash);
 
   buildWorld(scene);
+  buildDecor(scene, { toon, noOutline }); // sky, skyline, fence, props, light poles
   const pumps = PUMP_POS.map((_, i) => {
     const p = buildPump(i);
     scene.add(p.group);
@@ -263,7 +296,7 @@ export function createWorld(container) {
     const portrait = camera.aspect < 1;
     const halfWidth = portrait ? 5.9 : 7; // world units that must fit left↔right
     // On phones, look a bit lower so the pumps sit higher (room for the buttons below)
-    target.y = portrait ? -0.6 : 1;
+    target.y = portrait ? -0.25 : 1;
     // Wide screens: step back a bit more so the whole station (and the tank) fits under the HUD
     const minDist = portrait ? 14 : 18;
     const dist = Math.max(minDist, halfWidth / (Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect));
