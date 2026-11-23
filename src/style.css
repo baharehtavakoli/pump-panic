@@ -353,10 +353,7 @@ h1, p { margin: 0; }
 }
 .g-title { font-size: 15px; font-weight: 700; color: var(--muted); text-shadow: 0 2px 0 var(--ink); }
 .g-title b { color: #fff; }
-.tray .g-hold { width: 84px; height: 84px; }
-.tray .g-hold .icon { width: 28px; height: 28px; }
-.tray .g-hold b { font-size: 16px; }
-.tray .g-ring { inset: -8px; -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 0); mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 0); }
+.tray .g-hold { width: 104px; height: 104px; }
 .tray .g-lever { height: 136px; }
 .g-arrow { position: absolute; top: 8px; left: 0; right: 0; text-align: center; color: rgb(255 255 255 / 0.35); font-size: 14px; animation: bob2 0.9s ease-in-out infinite; }
 .tray .g-tap { width: 150px; height: 100px; }
