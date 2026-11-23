@@ -76,7 +76,7 @@ const ui = createUI({
   onStart: start,
   onRestart: () => start(game?.mode ?? 'daily'),
   onShare: async () => {
-    ui.shareNote(await shareResult(lastResult));
+    await shareResult(lastResult); // no note: the share flow speaks for itself
   },
   onSaveImage: () => saveImage(lastResult),
   onTool: useTool,
